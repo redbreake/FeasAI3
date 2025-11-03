@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Configurar API key de Gemini
-os.environ.setdefault("GEMINI_API_KEY", "AIzaSyDFVKV4YggegNuQlUdbbFOkDArS6SUKd6U")
+os.environ.setdefault("GEMINI_API_KEY", )
 
 
 # Quick-start development settings - unsuitable for production
