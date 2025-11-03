@@ -1,0 +1,258 @@
+{% extends 'usuarios/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Análisis de Aplicabilidad de IA</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-project-diagram"></i> {{ resultado.titulo_proyecto|default:"Análisis de Aplicabilidad de IA" }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-calendar"></i> Fecha de análisis:</strong> {{ busqueda.fecha_creacion|date:"d/m/Y H:i" }}
+                    </div>
+                    <div class="mb-4">
+                        <strong><i class="fas fa-question-circle"></i> Consulta original:</strong>
+                        <blockquote class="blockquote mt-2">
+                            {{ busqueda.texto_problema }}
+                        </blockquote>
+                    </div>
+                    <div class="mb-4">
+                        <h5><i class="fas fa-newspaper"></i> Resumen Ejecutivo:</h5>
+                        <p>{{ resultado.resumen_ejecutivo|linebreaksbr }}</p>
+                    </div>
+                    {% if resultado.puntuacion_viabilidad.justificacion_puntuacion %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-lightbulb"></i> Justificación del Puntaje:</h6>
+                            <p>{{ resultado.puntuacion_viabilidad.justificacion_puntuacion }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-check-circle"></i> Análisis de Coste-Beneficio
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ resultado.analisis_detallado.analisis_coste_beneficio }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-exclamation-triangle"></i> Alternativas No-IA
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ resultado.analisis_detallado.alternativas_no_ia }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search"></i> Consultas Relacionadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Basado en las recomendaciones estratégicas, aquí tienes algunas consultas relacionadas que puedes explorar:</p>
+                    <div class="row">
+                        {% if resultado.consultas_relacionadas %}
+                            {% for consulta in resultado.consultas_relacionadas %}
+                                <div class="col-md-12 mb-3">
+                                    <div class="card border-primary">
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title text-primary mb-2">
+                                                <i class="fas fa-search"></i> {{ consulta.titulo }}
+                                            </h6>
+                                            <p class="card-text mb-3">{{ consulta.descripcion }}</p>
+                                            <a class="btn btn-primary btn-sm" href="{% url 'core:home' %}" onclick="localStorage.setItem('consultaRelacionada', '{{ consulta.consulta_completa|escapejs }}');">
+                                                <i class="fas fa-arrow-right"></i> Explorar esta consulta
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {% for recomendacion in resultado.recomendaciones_estrategicas %}
+                                {% if forloop.counter <= 5 %}
+                                    <div class="col-md-6 mb-2">
+                                        <a class="btn btn-outline-primary btn-sm d-block text-start" href="{% url 'core:home' %}" onclick="localStorage.setItem('consultaRelacionada', '{{ recomendacion|escapejs }}');">
+                                            <i class="fas fa-search"></i> {{ recomendacion|truncatewords:5 }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt"></i> Métricas Principales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <div class="display-4 text-primary font-weight-bold">{{ resultado.average_viability }}%</div>
+                                <small class="text-muted">Puntuación de Viabilidad con IA</small>
+                                <progress class="progress mt-2" value="{{ resultado.average_viability }}" max="100"></progress>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <div class="text-success font-weight-bold">{{ resultado.titulo_proyecto }}</div>
+                                <small class="text-muted">Proyecto Analizado</small>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="border rounded p-3">
+                                <div class="text-info font-weight-bold">{{ resultado.indices_clave.adecuacion_ia.puntuacion }}%</div>
+                                <small class="text-muted">Adecuación del Problema</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header" id="recomendaciones-header">
+                    <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-lightbulb"></i> Recomendaciones</span>
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#recomendaciones-body" aria-expanded="false" aria-controls="recomendaciones-body" id="toggle-recomendaciones">
+                            <i class="fas fa-chevron-down" id="icon-recomendaciones"></i> Expandir
+                        </button>
+                    </h5>
+                </div>
+                <div class="card-body collapse" id="recomendaciones-body">
+                    <ol>
+                        {% for recomendacion in resultado.recomendaciones_estrategicas %}
+                            <li class="mb-2">{{ recomendacion }}</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools"></i> Análisis de Viabilidad Técnica
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ resultado.analisis_detallado.requisitos_y_desafios_tecnicos }}</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 d-flex justify-content-center">
+            <a href="{% url 'core:home' %}" class="btn btn-primary me-2">
+                <i class="fas fa-plus"></i> Nueva Consulta
+            </a>
+            <a href="{% url 'core:historial' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-history"></i> Ver Historial
+            </a>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('evaluacionChart').getContext('2d');
+
+    var dataGrafico = JSON.parse('{{ resultado.datos_grafico_radar|escapejs }}');
+
+    const evaluacionChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: dataGrafico.labels,
+            datasets: [{
+                label: 'Evaluación de Factores',
+                data: dataGrafico.valoracion,
+                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(0, 123, 255, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed.r + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Toggle recomendaciones
+    const toggleBtn = document.getElementById('toggle-recomendaciones');
+    const icon = document.getElementById('icon-recomendaciones');
+    toggleBtn.addEventListener('click', function() {
+        const isExpanded = document.getElementById('recomendaciones-body').classList.contains('show');
+        if (isExpanded) {
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+            toggleBtn.innerHTML = '<i class="fas fa-chevron-down" id="icon-recomendaciones"></i> Expandir';
+        } else {
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+            toggleBtn.innerHTML = '<i class="fas fa-chevron-up" id="icon-recomendaciones"></i> Colapsar';
+        }
+    });
+
+});
+</script>
+{% endblock %}
+{% endblock %}

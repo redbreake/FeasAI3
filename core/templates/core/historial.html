@@ -1,0 +1,241 @@
+{% extends 'usuarios/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Inicio</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Historial de Búsquedas</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-history"></i> Historial de Búsquedas
+                </h2>
+                <a href="{% url 'core:home' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nueva Búsqueda
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    {% if consultas %}
+        <div class="row">
+            {% for consulta in consultas %}
+                <div class="col-md-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-calendar"></i>
+                                    Búsqueda #{{ consulta.id }} - {{ consulta.fecha_creacion|date:"d/m/Y H:i" }}
+                                </h6>
+                                <div>
+                                    <a href="{% url 'core:resultado' consulta.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-eye"></i> Ver Resultados
+                                    </a>
+                                    <form method="post" action="{% url 'core:borrar_consulta' consulta.id %}" class="d-inline" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta consulta?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Borrar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="text-muted small">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <i class="fas fa-robot"></i>
+                                        Modelo utilizado: <strong>
+                                            {% if consulta.modelo == 'gemini' %}
+                                                Gemini 2.5 Flash
+                                            {% elif consulta.modelo == 'cerebras' %}
+                                                Cerebras Qwen-3 235B
+                                            {% else %}
+                                                {{ consulta.modelo|title }}
+                                            {% endif %}
+                                        </strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <i class="fas fa-tag"></i>
+                                        Categoría: <span class="badge bg-info">{{ consulta.categoria }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p class="text-muted mb-2">
+                                        <strong>Consulta:</strong>
+                                    </p>
+                                    <blockquote class="blockquote mb-0">
+                                        {{ consulta.texto_problema|truncatechars:200 }}
+                                        {% if consulta.texto_problema|length > 200 %}
+                                            <em class="text-muted">(Texto truncado...)</em>
+                                        {% endif %}
+                                    </blockquote>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <small class="text-muted">Análisis completado</small>
+                                        <br>
+                                        <i class="fas fa-check-circle fa-2x text-success mt-2"></i>
+                                        <br>
+                                        <small class="text-muted">{{ consulta.fecha_creacion|timesince }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación si hay muchas consultas -->
+        {% if consultas.has_other_pages %}
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="Paginación de consultas">
+                        <ul class="pagination justify-content-center">
+                            {% if consultas.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ consultas.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i> Anterior
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in consultas.paginator.page_range %}
+                                {% if num >= consultas.number|add:-2 and num <= consultas.number|add:2 %}
+                                    <li class="page-item {% if num == consultas.number %}active{% endif %}">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if consultas.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ consultas.next_page_number }}">
+                                        Siguiente <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-search fa-5x text-muted mb-3"></i>
+                        <h4 class="text-muted">No tienes búsquedas registradas</h4>
+                        <p class="text-muted">Realiza tu primera consulta para comenzar a construir tu historial.</p>
+                        <a href="{% url 'core:home' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket"></i> Empezar Ahora
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Información Estadística -->
+    {% if consultas %}
+        <div class="row mt-4">
+            <div class="col-lg-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3 class="display-4">{{ consultas|length }}</h3>
+                        <p class="mb-0">Consultas realizadas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="display-4">{{ consultas.0.fecha_creacion|date:"d/m/Y" }}</h3>
+                        <p class="mb-0">Primera consulta</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        {% if consultas %}
+                            {% for consulta in consultas reversed %}
+                                {% if forloop.first %}
+                                    <h3 class="display-4">{{ consulta.fecha_creacion|date:"d/m/Y" }}</h3>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <h3 class="display-4 text-muted">--</h3>
+                        {% endif %}
+                        <p class="mb-0">Última consulta</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3 class="display-4">{{ estadisticas_categoria|length }}</h3>
+                        <p class="mb-0">Categorías utilizadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas por Categoría -->
+        {% if estadisticas_categoria %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-pie"></i> Estadísticas por Categoría
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for estadistica in estadisticas_categoria %}
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card h-100 border-primary">
+                                            <div class="card-body text-center">
+                                                <h4 class="card-title text-primary">{{ estadistica.categoria }}</h4>
+                                                <h2 class="display-5">{{ estadistica.total }}</h2>
+                                                <p class="text-muted mb-0">consultas</p>
+                                                {% if estadistica.porcentaje > 0 %}
+                                                    <div class="progress mt-2">
+                                                        <div class="progress-bar bg-primary" role="progressbar"
+                                                             style="width: {{ estadistica.porcentaje }}%"
+                                                             aria-valuenow="{{ estadistica.total }}"
+                                                             aria-valuemin="0"
+                                                             aria-valuemax="{{ consultas|length }}"></div>
+                                                    </div>
+                                                    <small class="text-muted">{{ estadistica.porcentaje }}% del total</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

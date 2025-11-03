@@ -1,0 +1,118 @@
+{% extends 'usuarios/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">
+                        <i class="fas fa-chart-line"></i> Analizador de Aplicabilidad de IA
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-info-circle"></i> ¿Cómo funciona?</h5>
+                        <p>Describe tu problema o proyecto para analizar su aplicabilidad con IA en el campo de abajo.
+                        Nuestro sistema analizará la viabilidad técnica, aplicabilidad de IA y operativa,
+                        proporcionando un informe detallado con recomendaciones estratégicas.</p>
+                    </div>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="model" class="form-label">
+                                <h5><i class="fas fa-robot"></i> Selecciona el modelo de IA:</h5>
+                            </label>
+                            <select name="model" id="model" class="form-select">
+                                <option value="gemini" selected>Gemini (Recomendado)</option>
+                                <option value="cerebras">Cerebras</option>
+                            </select>
+                            <div class="form-text">Elige el modelo de IA para el análisis de viabilidad.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="problema" class="form-label">
+                                <h5><i class="fas fa-edit"></i> Describe tu problema o proyecto:</h5>
+                            </label>
+                            <textarea
+                                name="problema"
+                                id="problema"
+                                class="form-control"
+                                rows="8"
+                                placeholder="Ejemplo: Quiero implementar IA para detectar fraudes en transacciones bancarias..."
+                                required
+                            ></textarea>
+                            <div class="form-text">Describe detalladamente el problema o proyecto, incluyendo datos disponibles y recursos técnicos.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" class="btn btn-success btn-lg px-5">
+                                <i class="fas fa-search"></i> Analizar Viabilidad
+                            </button>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'core:historial' %}" class="btn btn-outline-primary btn-lg px-4">
+                                    <i class="fas fa-history"></i> Ver Historial
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Análisis Inteligente</h5>
+                            <p class="card-text">Utilizamos inteligencia artificial moderna para analizar tu idea desde múltiples perspectivas.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-chart-bar fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Resultados Visuales</h5>
+                            <p class="card-text">Obtén informes detallados con gráficos y recomendaciones estratégicas claras.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si hay una consulta relacionada en localStorage
+    const consultaRelacionada = localStorage.getItem('consultaRelacionada');
+    if (consultaRelacionada) {
+        const problemaTextarea = document.getElementById('problema');
+        if (problemaTextarea) {
+            problemaTextarea.value = consultaRelacionada;
+            // Opcional: Scroll al textarea
+            problemaTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Limpiar localStorage después de usar
+            localStorage.removeItem('consultaRelacionada');
+        }
+    }
+
+    // También verificar parámetros de URL por compatibilidad
+    const urlParams = new URLSearchParams(window.location.search);
+    const consulta = urlParams.get('consulta');
+    if (consulta && !consultaRelacionada) {
+        const problemaTextarea = document.getElementById('problema');
+        if (problemaTextarea) {
+            problemaTextarea.value = consulta;
+            // Opcional: Scroll al textarea
+            problemaTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+});
+</script>
+{% endblock %}
